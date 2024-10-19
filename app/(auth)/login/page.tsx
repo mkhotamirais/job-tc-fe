@@ -7,30 +7,72 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Separator } from "@/components/ui/separator";
-import Link from "next/link";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { apiAccessToken, baseUrl } from "@/lib/constants";
+import LoginGuest from "./LoginGuest";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().min(1, { message: "Please enter your email" }),
+  username: z.string().min(1, { message: "Please enter your username" }),
   password: z.string().min(1, { message: "Please enter your password" }),
 });
 
 type FormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
+
   const form = useForm<FormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { username: "", password: "" },
   });
 
-  const onSubmit = (values: FormData) => {
-    console.log(values);
+  const getRequestToken = async () => {
+    const response = await axios.get(`${baseUrl}/authentication/token/new`, {
+      headers: { Authorization: `Bearer ${apiAccessToken}` },
+    });
+    return response.data.request_token;
+  };
+
+  const onSubmit = async (values: FormData) => {
+    setPending(true);
+
+    const request_token = await getRequestToken();
+
+    const { username, password } = values;
+    await axios
+      .post(
+        `${baseUrl}/authentication/token/validate_with_login`,
+        { username, password, request_token },
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiAccessToken}` } }
+      )
+      .then(() => {
+        axios
+          .post(
+            `${baseUrl}/authentication/session/new`,
+            { request_token },
+            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiAccessToken}` } }
+          )
+          .then((res) => {
+            toast.success("Logged in successfully");
+            localStorage.setItem("session_id", res.data.session_id);
+            router.push("/");
+          });
+      })
+      .catch((err) => {
+        toast.error(err.response.data.status_message);
+      })
+      .finally(() => {
+        setPending(false);
+      });
   };
 
   return (
-    <div className="flex items-center justify-center h-full bg-secondary">
+    <div className="flex items-center justify-center h-full bg-secondary py-4">
       <div className="container">
         <div className="relative border max-w-md mx-auto shadow-lg p-8 rounded-lg bg-background">
           <div className="text-center mb-4">
@@ -41,12 +83,12 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} placeholder="example@gmail.com" />
+                      <Input disabled={pending} {...field} placeholder="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -59,26 +101,34 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} placeholder="********" />
+                      <Input disabled={pending} type="password" {...field} placeholder="********" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button disabled={pending} type="submit" className="w-full">
+                {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
               </Button>
             </form>
           </Form>
+          <p className="mt-4 text-sm text-center">
+            Do not have an account?{" "}
+            <a
+              href="https://www.themoviedb.org/signup"
+              target="_blank"
+              rel="noopener"
+              className="text-primary hover:underline"
+            >
+              Sign Up
+            </a>
+          </p>
           <div className="relative flex gap-4 mt-6">
             <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2">or</div>
             <Separator />
           </div>
-          <Button variant={"link"} asChild className="mt-6">
-            <Link href="/movie" className="w-full text-center">
-              Contunue as a guest
-            </Link>
-          </Button>
+          <LoginGuest />
         </div>
       </div>
     </div>

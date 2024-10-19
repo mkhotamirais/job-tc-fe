@@ -3,13 +3,19 @@
 import Link from "next/link";
 import { ModeToggle } from "./theme/ModeToggle";
 import { Button } from "./ui/button";
+import { Heart } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 bg-background border-b">
+    <header className="z-50 sticky top-0 bg-background border-b">
       <div className="container flex justify-between h-16 items-center">
         <Logo />
         <div className="flex gap-4 items-center">
+          <Button asChild>
+            <Link href="/favorite" title="favorite movies">
+              <Heart />
+            </Link>
+          </Button>
           <Button asChild>
             <Link title="login" href="/login">
               Login

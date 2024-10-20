@@ -6,17 +6,18 @@ import axios from "axios";
 import MovieCard from "@/components/MovieCard";
 import { useMovie } from "@/hooks/useMovie";
 import LoaderSpin from "@/components/LoaderSpin";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function FavoritePage() {
   const [pending, setPending] = useState(false);
-  const { isLogin, favMovies, setFavMovies, sessId } = useMovie();
+  const { pendingAuth, isLogin, favMovies, setFavMovies, sessId } = useMovie();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!isLogin) {
-      redirect("/login");
+    if (!isLogin && !pendingAuth) {
+      router.push("/login");
     }
-  }, [isLogin]);
+  }, [isLogin, pendingAuth, router]);
 
   useEffect(() => {
     setPending(true);

@@ -10,9 +10,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     setMounted(true);
   }, []);
-  const { sessId, setIsLogin } = useMovie();
+  const { setPendingAuth, sessId, setIsLogin } = useMovie();
 
   useEffect(() => {
+    setPendingAuth(true);
     axios
       .get(`${baseUrl}/account/21375178?session_id=${sessId}&api_key=${apiKey}`)
       .then(() => {
@@ -20,8 +21,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       })
       .catch(() => {
         setIsLogin(false);
+      })
+      .finally(() => {
+        setPendingAuth(false);
       });
-  }, [sessId, setIsLogin]);
+  }, [sessId, setIsLogin, setPendingAuth]);
 
   if (!mounted) return null;
   return <>{children}</>;

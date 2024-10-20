@@ -2,6 +2,8 @@ import { Movie } from "@/lib/types";
 import { create } from "zustand";
 
 type MovieState = {
+  pendingAuth: boolean;
+  setPendingAuth: (pendingAuth: boolean) => void;
   sessId: string | null;
   isLogin: boolean;
   setIsLogin: (isLogin: boolean) => void;
@@ -14,6 +16,8 @@ type MovieState = {
 };
 
 export const useMovie = create<MovieState>((set) => ({
+  pendingAuth: false,
+  setPendingAuth: (pendingAuth) => set({ pendingAuth }),
   sessId: typeof window !== "undefined" ? localStorage.getItem("session_id") : null,
   isLogin: false,
   setIsLogin: (isLogin) => set({ isLogin }),

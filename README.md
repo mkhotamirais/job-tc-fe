@@ -1,5 +1,5 @@
 ### How To Run This Project
-This project adalah tugas dari EnterKomputer sebagai Frontend Developer.
+Project ini adalah hasil dari 
 
 1. Page Utama : 
 - State Now Playing Movie Card (limit 6)

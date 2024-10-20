@@ -8,12 +8,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Separator } from "@/components/ui/separator";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { apiAccessToken, baseUrl } from "@/lib/constants";
 import LoginGuest from "./LoginGuest";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useMovie } from "@/hooks/useMovie";
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Please enter your username" }),
@@ -23,8 +24,9 @@ const loginSchema = z.object({
 type FormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const { setIsLogin } = useMovie();
   const [pending, setPending] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
 
   const form = useForm<FormData>({
     resolver: zodResolver(loginSchema),
@@ -60,7 +62,11 @@ export default function LoginPage() {
           .then((res) => {
             toast.success("Logged in successfully");
             localStorage.setItem("session_id", res.data.session_id);
-            router.push("/");
+            localStorage.removeItem("guest_session_id");
+
+            setIsLogin(true);
+            window.location.href = "/";
+            // router.push("/");
           });
       })
       .catch((err) => {
@@ -72,12 +78,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center h-full bg-secondary py-4">
-      <div className="container">
-        <div className="relative border max-w-md mx-auto shadow-lg p-8 rounded-lg bg-background">
+    <div className="grow flex items-center justify-center h-full bg-secondary">
+      <div className="container h-full">
+        <div className="h-full relative border max-w-md mx-auto shadow-lg p-8 rounded-lg bg-background">
           <div className="text-center mb-4">
             <h1 className="text-xl font-bold mb-2">Welcome back</h1>
-            <p>Sign in to your account</p>
+            <p className="text-sm">Sign in to your account</p>
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

@@ -1,20 +1,24 @@
 "use client";
 
 import axios from "axios";
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
 import { apiAccessToken, apiKey, baseUrl } from "@/lib/constants";
 import { useMovie } from "@/hooks/useMovie";
 import { Movie } from "@/lib/types";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export default function AddToFavoriteBtn({ movieId, item }: { movieId: number; item: Movie }) {
-  const { favMovies, setFavMovies } = useMovie();
+  const { favMovies, setFavMovies, sessId } = useMovie();
+  const [pending, setPending] = useState(false);
   const favIds = favMovies.map((item) => item.id);
 
   const onClick = async () => {
+    setPending(true);
+
     axios
       .post(
-        `${baseUrl}/account/21375178/favorite?api_key=${apiKey}&session_id=${localStorage.getItem("session_id")}`,
+        `${baseUrl}/account/21375178/favorite?api_key=${apiKey}&session_id=${sessId}`,
         {
           media_type: "movie",
           media_id: movieId,
@@ -40,6 +44,9 @@ export default function AddToFavoriteBtn({ movieId, item }: { movieId: number; i
       .catch((error) => {
         toast.error(`Failed to add ${item.title} to favorite`);
         console.error(error);
+      })
+      .finally(() => {
+        setPending(false);
       });
   };
 
@@ -47,7 +54,11 @@ export default function AddToFavoriteBtn({ movieId, item }: { movieId: number; i
 
   return (
     <button type="button" onClick={onClick} title={title} className="absolute right-2 top-2">
-      <Heart className={`size-6 ${favIds.includes(item?.id) ? "fill-red-500" : ""} text-red-500`} />
+      {pending ? (
+        <Loader2 className="animate-spin size-6 text-red-500" />
+      ) : (
+        <Heart className={`size-6 ${favIds.includes(item?.id) ? "fill-red-500" : ""} text-red-500`} />
+      )}
     </button>
   );
 }
